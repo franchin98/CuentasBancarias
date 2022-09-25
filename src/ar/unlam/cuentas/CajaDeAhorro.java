@@ -21,35 +21,33 @@ public final class CajaDeAhorro extends Cuenta {
 
     @Override
     public void extraer(Double importeADebitar) {
-	if (elSaldoDeLaCuentaEsMayor(importeADebitar)) {
+	if (elSaldoDeLaCuentaEsSuficiente(importeADebitar)) {
 	    ejecutarExtraccion(importeADebitar);
+	    registrarExtraccion(importeADebitar);
 	}
     }
-    
+
     @Override
     public void transferir(Cuenta destino, Double importeATransferir) {
-	if(elSaldoDeLaCuentaEsMayor(importeATransferir)) {
+	if (elSaldoDeLaCuentaEsSuficiente(importeATransferir)) {
 	    descontarSaldoDeLaCuenta(importeATransferir);
 	    destino.depositar(importeATransferir);
+	    registrarTransferencia(importeATransferir);
 	}
     }
-    
-    private Boolean elSaldoDeLaCuentaEsMayor(Double importeADebitar) {
+
+    private Boolean elSaldoDeLaCuentaEsSuficiente(Double importeADebitar) {
 	return this.getSaldo() >= importeADebitar && importeADebitar > 0.0;
     }
 
     /*
-     * A partir de la 5ta extracción se aplica el recargo de $ 6,00. De las dos
-     * maneras, se descuenta saldo de la cuenta y se registra la extracción en las
-     * transacciones del cliente con el importe de la operación.
+     * A partir de la 5ta extracción se aplica el recargo de $ 6,00.
      */
     private void ejecutarExtraccion(Double importeADebitar) {
 	if (esLaQuintaExtraccion()) {
 	    descontarSaldoDeLaCuenta(importeADebitar + COMISION_DE_EXTRACCION);
-	    registrarExtraccion(importeADebitar);
 	} else {
 	    descontarSaldoDeLaCuenta(importeADebitar);
-	    registrarExtraccion(importeADebitar);
 	}
     }
 
@@ -60,7 +58,11 @@ public final class CajaDeAhorro extends Cuenta {
     private void registrarExtraccion(Double importeDeLaExtraccion) {
 	transaccionesDeLaCuenta
 		.add(new Transaccion(TipoDeTransaccion.EXTRACCION, importeDeLaExtraccion, LocalDate.now()));
+    }
 
+    private void registrarTransferencia(Double importeDeLaTransferencia) {
+	transaccionesDeLaCuenta
+		.add(new Transaccion(TipoDeTransaccion.TRANSFERENCIA, importeDeLaTransferencia, LocalDate.now()));
     }
 
     private Boolean esLaQuintaExtraccion() {

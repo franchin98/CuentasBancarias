@@ -2,38 +2,66 @@ package ar.unlam.cuentas;
 
 import ar.unlam.abstractas.Cuenta;
 
-public class CuentaCorriente extends Cuenta {
+public final class CuentaCorriente extends Cuenta {
 
-	private Double saldoDescubierto;
+    private final Double COMISION_USO_SALDO_DESCUBIERTO = 0.05D;
 
-	public CuentaCorriente(String nombreDelTitular) {
-		super(nombreDelTitular);
+    private Double saldoDescubierto;
 
+    public CuentaCorriente(String nombreDelTitular) {
+	super(nombreDelTitular);
+	saldoDescubierto = 0.00D;
+    }
+
+    public CuentaCorriente(String nombreDelTitular, Double saldoInicial, Double saldoDescubierto) {
+	super(nombreDelTitular, saldoInicial);
+	this.saldoDescubierto = saldoDescubierto;
+
+    }
+
+    @Override
+    public void extraer(Double importe) {
+	if (elSaldoEsSuficienteParaDebitar(importe) && noEsNegativo(importe))
+	    descontarSaldoDeLaCuenta(importe);
+	else if (saldoYDescubiertoEsSuficienteParaDebitar(importe) && noEsNegativo(importe))
+	    descontarSaldoYDescubierto(importe);
+    }
+
+    @Override
+    public void transferir(Cuenta destino, Double importe) {
+	if (elSaldoEsSuficienteParaDebitar(importe) && noEsNegativo(importe)) {
+	    this.descontarSaldoDeLaCuenta(importe);
+	    destino.depositar(importe);
 	}
+    }
 
-	public CuentaCorriente(String nombreDelTitular, Double saldoInicial) {
-		super(nombreDelTitular, saldoInicial);
+    public void setSaldoDescubierto(Double saldoDescubierto) {
+	this.saldoDescubierto = saldoDescubierto;
+    }
 
-	}
+    public Double getSaldoDescubierto() {
+	return saldoDescubierto;
+    }
 
-	@Override
-	public void extraer(Double importe) {
+    private void descontarSaldoYDescubierto(Double importe) {
+	saldoDescubierto -= Math.abs(this.saldo - importe);
+	descontarSaldoDeLaCuenta(importe + ((Math.abs(this.saldo - importe) * COMISION_USO_SALDO_DESCUBIERTO)));
+    }
 
-	}
+    private Boolean elSaldoEsSuficienteParaDebitar(Double importeADebitar) {
+	return this.saldo >= importeADebitar;
+    }
 
-	@Override
-	public void transferir(Cuenta destino, Double importe) {
+    private Boolean noEsNegativo(Double importe) {
+	return !(importe <= 0.00D);
+    }
 
-	}
+    private Boolean saldoYDescubiertoEsSuficienteParaDebitar(Double importe) {
+	return (saldo + saldoDescubierto) >= importe;
+    }
 
-	public void setSaldoDescubierto(Double saldoDescubierto) {
-		this.saldoDescubierto = saldoDescubierto;
-	}
-
-	public Double getSaldoDescubierto() {
-		return saldoDescubierto;
-	}
-	
-	
+    private void descontarSaldoDeLaCuenta(Double importeADebitar) {
+	this.saldo -= importeADebitar;
+    }
 
 }
